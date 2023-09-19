@@ -41,7 +41,7 @@ where
     while let Some(current) = dir.next_entry().await?.map(|e| e.path()) {
         if let Some(plan) = config.parse(&current) {
             let entry = entry.to_owned();
-            println!("clean: {} ...", entry.display());
+            println!("found: {} ...", current.display());
             tasks.push(Box::pin(async move {
                 let result = plan.run(&entry).await;
                 println!(
