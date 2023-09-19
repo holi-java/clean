@@ -66,7 +66,7 @@ impl Config {
         let mut registry = HashMap::<String, Registry>::new();
         while let Some(line) = config.next_line().await? {
             let line = line.trim();
-            if line.is_empty() {
+            if line.is_empty() || line.starts_with('#') {
                 continue;
             }
 
@@ -128,8 +128,6 @@ pom.xml = mvn -B clean
 mod tests {
     use std::{fs::create_dir_all, path::Path, time::SystemTime};
 
-    use tokio::io::empty;
-
     use crate::{
         cmd::Cmd,
         conf::{Config, Plan},
@@ -138,7 +136,7 @@ mod tests {
 
     #[tokio::test]
     async fn parse_empty_config() {
-        let config = Config::load(empty()).await.unwrap();
+        let config = Config::empty();
         assert_eq!(
             config
                 .parse("Cargo.toml")
@@ -155,13 +153,24 @@ mod tests {
         let config = Config::load(b"node_modules/".as_ref()).await.unwrap();
         assert_eq!(
             config
-                .parse("Cargo.toml")
+                .parse("tests/Cargo.toml")
                 .unwrap()
                 .into_cmd()
                 .unwrap()
                 .command,
             "cargo"
         );
+        assert!(matches!(
+            config.parse("tests/data/node_modules").unwrap(),
+            Plan::RmDir(dir) if dir == "node_modules"
+        ));
+    }
+
+    #[tokio::test]
+    async fn skip_comments() {
+        let config = Config::load(b"#Node Dependencies Directory\n node_modules/".as_ref())
+            .await
+            .unwrap();
         assert!(matches!(
             config.parse("tests/data/node_modules").unwrap(),
             Plan::RmDir(dir) if dir == "node_modules"
