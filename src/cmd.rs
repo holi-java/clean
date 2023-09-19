@@ -5,8 +5,8 @@ use tokio::process::{Child, Command};
 use crate::IOResult;
 
 pub struct Cmd<'a> {
-    command: Cow<'a, str>,
-    args: Vec<Cow<'a, str>>,
+    pub command: Cow<'a, str>,
+    pub args: Vec<Cow<'a, str>>,
 }
 
 impl<'a> Cmd<'a> {
