@@ -1,0 +1,23 @@
+[package]
+name = "clean"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.32", features = [
+  "rt-multi-thread",
+  "macros",
+  "fs",
+  "process",
+  "io-util",
+  "io-std",
+] }
+tokio-stream = { version = "0.1", features = ["fs"] }
+future-utils = "0.12"
+futures = "0.3"
+async-recursion = "1.0"
+
+[dev-dependencies]
+
