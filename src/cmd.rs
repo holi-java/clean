@@ -55,13 +55,21 @@ impl<'a> FromStr for Cmd<'a> {
             return Ok(Cmd::new(parts.next().unwrap(), parts));
         }
 
-        match command {
-            "Cargo.toml" => Ok(Cmd::new("cargo", ["clean"])),
-            "go.mod" => Ok(Cmd::new("go", ["clean"])),
-            "pom.xml" => Ok(Cmd::new("mvn", ["-B", "-o", "clean"])),
-            "build.gradle" => Ok(Cmd::new("gradle", ["--offline", "--parallel", "clean"])),
-            _ => Err(format!("command can not be resolved: `{command}`")),
+        macro_rules! resolve {
+            ($(($cmd:ident, $($tt:tt)*)),*) => {
+                match command {
+                    $(stringify!($($tt)*) => Ok(Cmd::new(stringify!($cmd), ["clean"])),)*
+                    _ => Err(format!("command can not be resolved: `{command}`")),
+                }
+            };
         }
+
+        resolve!(
+            (cargo, Cargo.toml),
+            (go, go.mod),
+            (mvn, pom.xml),
+            (gradle, build.gradle)
+        )
     }
 }
 
@@ -103,7 +111,7 @@ mod tests {
         for (file, expected) in tests {
             let cmd = file.parse::<Cmd>().unwrap();
             assert_eq!(cmd.command, expected);
-            assert_eq!(cmd.args.last().unwrap(), "clean");
+            assert_eq!(cmd.args, ["clean"]);
         }
     }
 
