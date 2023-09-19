@@ -41,6 +41,7 @@ impl<'a> Plan<'a> {
 
 type Registry = Box<dyn Fn() -> Plan<'static>>;
 
+#[derive(Default)]
 pub struct Config {
     registry: HashMap<String, Registry>,
 }
@@ -49,12 +50,17 @@ unsafe impl Send for Config {}
 unsafe impl Sync for Config {}
 
 impl Config {
-    pub async fn default() -> IOResult<Config> {
+    pub async fn home() -> IOResult<Config> {
         match home::home_dir().map(|home| home.join(".cleanrc")) {
             Some(file) if file.is_file() => Self::load(File::open(file).await?).await,
-            _ => Self::load(tokio::io::empty()).await,
+            _ => Ok(Self::empty()),
         }
     }
+
+    pub fn empty() -> Config {
+        Default::default()
+    }
+
     pub async fn load<T: AsyncRead + Unpin>(config: T) -> IOResult<Config> {
         let mut config = BufReader::new(config).lines();
         let mut registry = HashMap::<String, Registry>::new();

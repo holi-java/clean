@@ -1,7 +1,8 @@
-use std::{io, path::Path, sync::Arc};
+use std::{io, path::Path};
 
-use clean::{clean, conf::Config};
+use clean::{clean_with_config, conf::Config, IOResult};
 use tokio::fs;
+
 #[tokio::test]
 async fn clean_dir() {
     let start = std::env::temp_dir().join("test");
@@ -13,7 +14,7 @@ async fn clean_dir() {
     let to_removed = root.join("target");
     assert!(to_removed.exists());
 
-    assert!(clean(&start, default_config().await).await.unwrap());
+    assert!(clean(&start).await.unwrap());
     assert!(!to_removed.exists());
     assert!(root.join("Cargo.toml").exists());
 }
@@ -29,9 +30,7 @@ async fn clean_dir_recursively() {
     let to_removed = root.join("target");
     assert!(to_removed.exists());
 
-    assert!(clean(&start.join("../.."), default_config().await)
-        .await
-        .unwrap());
+    assert!(clean(&start.join("../..")).await.unwrap());
     assert!(!to_removed.exists());
     assert!(root.join("Cargo.toml").exists());
 }
@@ -50,7 +49,7 @@ async fn clean_all_generated_dirs() {
     assert!(a.exists());
     assert!(b.exists());
 
-    assert!(clean(&start, default_config().await).await.unwrap());
+    assert!(clean(&start).await.unwrap());
     assert!(!a.exists());
     assert!(!b.exists());
 }
@@ -71,6 +70,9 @@ async fn copy<S: AsRef<Path>, D: AsRef<Path>>(src: S, dest: D) -> io::Result<()>
     Ok(())
 }
 
-async fn default_config() -> Arc<Config> {
-    Arc::new(Config::default().await.unwrap())
+pub async fn clean<P>(entry: P) -> IOResult<bool>
+where
+    P: AsRef<Path>,
+{
+    clean_with_config(entry, Config::empty()).await
 }
