@@ -8,7 +8,7 @@ use tokio::{
 use crate::{cmd::Cmd, Error, Result};
 
 #[derive(Debug, Clone)]
-pub enum Plan<'a> {
+pub(crate) enum Plan<'a> {
     Cmd(Cmd<'a>),
     RmDir(OsString),
 }
@@ -111,7 +111,7 @@ pom.xml = mvn -B clean
         }
     }
 
-    pub fn parse<P: AsRef<Path>>(&self, path: P) -> Option<Plan<'static>> {
+    pub(crate) fn parse<P: AsRef<Path>>(&self, path: P) -> Option<Plan<'static>> {
         let path = path.as_ref();
         let filename = path.file_name()?.to_str()?;
         match self.registry.get(filename) {

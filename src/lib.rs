@@ -23,7 +23,7 @@ pub mod conf;
 mod error;
 pub use error::Error;
 
-pub type IOResult<T> = std::io::Result<T>;
+pub(crate) type IOResult<T> = std::io::Result<T>;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub async fn clean<P>(entry: P) -> Result<bool>
