@@ -1,6 +1,6 @@
-#![feature(io_error_other)]
 use std::{
-    io::Write,
+    fmt::Display,
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -21,16 +21,16 @@ mod cmd;
 pub mod conf;
 
 pub type IOResult<T> = std::io::Result<T>;
-type Result = IOResult<bool>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-pub async fn clean<P>(entry: P) -> Result
+pub async fn clean<P>(entry: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
     clean_with_config(entry, Config::home().await?).await
 }
 
-pub async fn clean_with_config<P>(entry: P, config: Config) -> Result
+pub async fn clean_with_config<P>(entry: P, config: Config) -> Result<bool>
 where
     P: AsRef<Path>,
 {
@@ -46,7 +46,7 @@ where
         .try_fold(true, |status, result| result.map(|each| each || status));
 
     type ExecutionRecv = Arc<Mutex<Receiver<Execution<'static>>>>;
-    fn spawn(n: usize, rx: ExecutionRecv) -> TryJoinAll<JoinHandle<Result>> {
+    fn spawn(n: usize, rx: ExecutionRecv) -> TryJoinAll<JoinHandle<Result<bool>>> {
         try_join_all((0..n).map(move |_| {
             let rx = rx.clone();
             tokio::spawn(async move {
@@ -94,7 +94,7 @@ where
 struct Execution<'a>(Plan<'a>, PathBuf);
 
 impl<'a> Execution<'a> {
-    async fn run(&self) -> Result {
+    async fn run(&self) -> Result<bool> {
         use termcolor::{
             Buffer, BufferWriter, Color, ColorChoice, ColorSpec, HyperlinkSpec, WriteColor,
         };
@@ -103,13 +103,13 @@ impl<'a> Execution<'a> {
 
         return result;
 
-        fn write(result: &Result, path: &Path) -> IOResult<()> {
+        fn write(result: &Result<bool>, path: &Path) -> Result<()> {
             use std::io::{stdout, IsTerminal};
             let out = BufferWriter::stdout(match stdout().is_terminal() {
                 true => ColorChoice::Always,
                 _ => ColorChoice::Never,
             });
-            out.print(&try_concat(tag(path, &out), colorized(result, &out))?)
+            Ok(out.print(&try_concat(tag(path, &out), colorized(result, &out))?)?)
         }
 
         fn try_concat(head: IOResult<Buffer>, tail: IOResult<Buffer>) -> IOResult<Buffer> {
@@ -134,7 +134,7 @@ impl<'a> Execution<'a> {
             Ok(buf)
         }
 
-        fn colorized(result: &Result, out: &BufferWriter) -> IOResult<Buffer> {
+        fn colorized(result: &Result<bool>, out: &BufferWriter) -> IOResult<Buffer> {
             let mut buf = out.buffer();
             let (fg, text) = if let Ok(true) = result {
                 (Color::Green, "ok")
@@ -148,5 +148,37 @@ impl<'a> Execution<'a> {
             buf.set_color(&spec)?;
             Ok(buf)
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum Error {
+    IO(io::Error),
+    Message(String),
+}
+
+impl std::error::Error for Error {}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::IO(err) => err.fmt(f),
+            Error::Message(err) => format!("error: {err}").fmt(f),
+        }
+    }
+}
+
+impl Error {
+    pub fn other<S: Display>(err: S) -> Self {
+        Error::Message(err.to_string())
+    }
+}
+
+impl<T> From<T> for Error
+where
+    io::Error: From<T>,
+{
+    fn from(err: T) -> Self {
+        Error::IO(From::from(err))
     }
 }

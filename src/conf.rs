@@ -1,11 +1,11 @@
-use std::{collections::HashMap, ffi::OsString, io::Error, path::Path};
+use std::{collections::HashMap, ffi::OsString, path::Path};
 
 use tokio::{
     fs::File,
     io::{AsyncBufReadExt, AsyncRead, BufReader},
 };
 
-use crate::{cmd::Cmd, IOResult, Result};
+use crate::{cmd::Cmd, Error, Result};
 
 #[derive(Debug, Clone)]
 pub enum Plan<'a> {
@@ -29,15 +29,15 @@ impl<'a> Plan<'a> {
         }
     }
 
-    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result {
+    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result<bool> {
         let work_dir = work_dir.as_ref();
         match self {
             Plan::Cmd(cmd) if work_dir.exists() => {
-                cmd.run(work_dir).await.map(|status| status.success())
+                Ok(cmd.run(work_dir).await.map(|status| status.success())?)
             }
             Plan::RmDir(dir) => match work_dir.join(dir) {
                 path if !path.exists() => Ok(true),
-                path => tokio::fs::remove_dir_all(path).await.map(|_| true),
+                path => Ok(tokio::fs::remove_dir_all(path).await.map(|_| true)?),
             },
             _ => Ok(true),
         }
@@ -55,7 +55,7 @@ unsafe impl Send for Config {}
 unsafe impl Sync for Config {}
 
 impl Config {
-    pub async fn home() -> IOResult<Config> {
+    pub async fn home() -> Result<Config> {
         match home::home_dir().map(|home| home.join(".cleanrc")) {
             Some(file) if file.is_file() => Self::load(File::open(file).await?).await,
             _ => Ok(Self::empty()),
@@ -66,7 +66,7 @@ impl Config {
         Default::default()
     }
 
-    pub async fn load<T: AsyncRead + Unpin>(config: T) -> IOResult<Config> {
+    pub async fn load<T: AsyncRead + Unpin>(config: T) -> Result<Config> {
         let mut config = BufReader::new(config).lines();
         let mut registry = HashMap::<String, Registry>::new();
         while let Some(line) = config.next_line().await? {
@@ -242,7 +242,7 @@ mod tests {
         let _guard = RmDirGuard(&test);
 
         let rm = Plan::RmDir(test.file_name().unwrap().to_owned());
-        let result: Result = rm.run(tmp).await;
+        let result: Result<bool> = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
     }
@@ -250,14 +250,14 @@ mod tests {
     #[tokio::test]
     async fn return_immediately_when_rm_dir_which_did_not_exists() {
         let rm = Plan::RmDir("node_modules".into());
-        let result: Result = rm.run(".").await;
+        let result: Result<bool> = rm.run(".").await;
         assert!(result.unwrap());
     }
 
     #[tokio::test]
     async fn return_immediately_work_dir_did_not_exists() {
         let rm = Plan::RmDir("node_modules".into());
-        let result: Result = rm.run("/home/unknown").await;
+        let result: Result<bool> = rm.run("/home/unknown").await;
         assert!(result.unwrap());
     }
 
@@ -282,7 +282,7 @@ mod tests {
                 test.file_name().unwrap().to_string_lossy().to_string(),
             ],
         ));
-        let result: Result = rm.run(tmp).await;
+        let result: Result<bool> = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
     }

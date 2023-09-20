@@ -1,6 +1,6 @@
 use std::{io, path::Path};
 
-use clean::{clean_with_config, conf::Config, IOResult};
+use clean::{clean_with_config, conf::Config, Result};
 use tokio::fs;
 
 #[tokio::test]
@@ -70,7 +70,7 @@ async fn copy<S: AsRef<Path>, D: AsRef<Path>>(src: S, dest: D) -> io::Result<()>
     Ok(())
 }
 
-pub async fn clean<P>(entry: P) -> IOResult<bool>
+pub async fn clean<P>(entry: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
