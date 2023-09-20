@@ -123,7 +123,10 @@ impl<'a> Execution<'a> {
         fn tag(path: &Path, out: &BufferWriter) -> IOResult<Buffer> {
             let mut buf = out.buffer();
             write!(buf, "clean: ")?;
-            let url = format!("file://{}", path.display());
+            use path_absolutize::Absolutize;
+            let url = format!("file://{}", path.absolutize()?.display());
+            #[cfg(target_os = "windows")]
+            let url = url.replace('\\', "/");
             buf.set_hyperlink(&HyperlinkSpec::open(url.as_bytes()))?;
             write!(buf, "{}", path.display())?;
             buf.set_hyperlink(&HyperlinkSpec::close())?;

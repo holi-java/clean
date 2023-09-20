@@ -126,7 +126,6 @@ mod tests {
     use std::{fs::create_dir_all, path::Path, time::SystemTime};
 
     use crate::{
-        cmd::Cmd,
         conf::{Config, Plan},
         Result,
     };
