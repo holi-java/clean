@@ -5,7 +5,7 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
 };
 
-use crate::{cmd::Cmd, IOResult};
+use crate::{cmd::Cmd, IOResult, Result};
 
 #[derive(Debug, Clone)]
 pub enum Plan<'a> {
@@ -29,7 +29,7 @@ impl<'a> Plan<'a> {
         }
     }
 
-    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> IOResult<bool> {
+    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result {
         let work_dir = work_dir.as_ref();
         match self {
             Plan::Cmd(cmd) if work_dir.exists() => {
@@ -128,7 +128,7 @@ mod tests {
     use crate::{
         cmd::Cmd,
         conf::{Config, Plan},
-        IOResult,
+        Result,
     };
 
     #[tokio::test]
@@ -243,7 +243,7 @@ mod tests {
         let _guard = RmDirGuard(&test);
 
         let rm = Plan::RmDir(test.file_name().unwrap().to_owned());
-        let result: IOResult<bool> = rm.run(tmp).await;
+        let result: Result = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
     }
@@ -251,14 +251,14 @@ mod tests {
     #[tokio::test]
     async fn return_immediately_when_rm_dir_which_did_not_exists() {
         let rm = Plan::RmDir("node_modules".into());
-        let result: IOResult<bool> = rm.run(".").await;
+        let result: Result = rm.run(".").await;
         assert!(result.unwrap());
     }
 
     #[tokio::test]
     async fn return_immediately_work_dir_did_not_exists() {
         let rm = Plan::RmDir("node_modules".into());
-        let result: IOResult<bool> = rm.run("/home/unknown").await;
+        let result: Result = rm.run("/home/unknown").await;
         assert!(result.unwrap());
     }
 
@@ -283,7 +283,7 @@ mod tests {
                 test.file_name().unwrap().to_string_lossy().to_string(),
             ],
         ));
-        let result: IOResult<bool> = rm.run(tmp).await;
+        let result: Result = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
     }
