@@ -1,6 +1,6 @@
 # Project Clean Tools
 Project clean tools supports `rust`, `golang`, `mvn`, `gradle` projects out of the box.
-But you could custom your own clean command via custom config file: `.cleanrc`.
+But you could custom your own clean command via [custom config file](#custom-config-file): `.cleanrc`.
 
 ## Install
 
