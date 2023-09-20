@@ -1,4 +1,5 @@
-# Project Clean Tools
+# Project Clean Tools [![Rust][badge]][rust]
+
 Project clean tools supports `rust`, `golang`, `maven`, `gradle` projects out of the box.
 But you could custom your own clean command via [custom config file](#custom-config-file): `.cleanrc`.
 
@@ -30,3 +31,6 @@ node_modules/
 # Using custom command to run clean
 pom.xml = mvn -B --offline clean
 ```
+
+[badge]: https://github.com/holi-java/clean/actions/workflows/rust.yml/badge.svg?branch=main
+[rust]: https://github.com/holi-java/clean/actions/workflows/rust.yml
