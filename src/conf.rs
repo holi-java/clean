@@ -275,7 +275,7 @@ mod tests {
         let _guard = RmDirGuard(&test);
         create_dir_all(&test).unwrap();
 
-        let rm = Plan::Cmd(Cmd::new(
+        let rm = Plan::Cmd(crate::cmd::Cmd::new(
             "rm",
             [
                 "-d".to_string(),

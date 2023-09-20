@@ -56,19 +56,25 @@ impl<'a> FromStr for Cmd<'a> {
         }
 
         macro_rules! resolve {
-            ($(($cmd:ident, $($tt:tt)*)),*) => {
+            ( $($(#[$meta:meta])? ( $file:literal, $($tt:tt)* )),* $(,)? ) => {
                 match command {
-                    $(stringify!($($tt)*) => Ok(Cmd::new(stringify!($cmd), ["clean"])),)*
+                    $( $(#[$meta])? $file => Ok(Cmd::new(stringify!($($tt)*), ["clean"])),)*
                     _ => Err(format!("command can not be resolved: `{command}`")),
                 }
             };
         }
 
         resolve!(
-            (cargo, Cargo.toml),
-            (go, go.mod),
-            (mvn, pom.xml),
-            (gradle, build.gradle)
+            ("Cargo.toml", cargo),
+            ("go.mod", go),
+            #[cfg(not(target_os = "windows"))]
+            ("pom.xml", mvn),
+            #[cfg(not(target_os = "windows"))]
+            ("build.gradle", gradle),
+            #[cfg(target_os = "windows")]
+            ("pom.xml", mvn.cmd),
+            #[cfg(any(target_os = "windows"))]
+            ("build.gradle", gradle.bat),
         )
     }
 }
@@ -101,12 +107,29 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "windows"))]
     fn builtin_commands() {
         let tests = [
             ("Cargo.toml", "cargo"),
             ("go.mod", "go"),
             ("pom.xml", "mvn"),
             ("build.gradle", "gradle"),
+        ];
+        for (file, expected) in tests {
+            let cmd = file.parse::<Cmd>().unwrap();
+            assert_eq!(cmd.command, expected);
+            assert_eq!(cmd.args, ["clean"]);
+        }
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn builtin_commands_on_windows() {
+        let tests = [
+            ("Cargo.toml", "cargo"),
+            ("go.mod", "go"),
+            ("pom.xml", "mvn.cmd"),
+            ("build.gradle", "gradle.bat"),
         ];
         for (file, expected) in tests {
             let cmd = file.parse::<Cmd>().unwrap();
