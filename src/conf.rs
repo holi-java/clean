@@ -263,6 +263,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[cfg(target_os = "linux")]
     async fn run_cmd_plan() {
         let tmp = std::env::temp_dir();
         let test = tmp.join(format!(
