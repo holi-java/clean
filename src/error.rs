@@ -12,7 +12,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::IO(err) => err.fmt(f),
-            Error::Message(err) => format!("error: {err}").fmt(f),
+            Error::Message(err) => err.fmt(f),
         }
     }
 }

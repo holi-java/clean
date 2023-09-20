@@ -99,13 +99,13 @@ impl Config {
         fn help() -> Error {
             Error::other(
                 "\
-# Config Examples:
+# Config Examples
 
 # rm directory recursively
 node_modules/
 
 # run custom command
-pom.xml = mvn -B clean
+pom.xml = mvn -B clean\
 ",
             )
         }
