@@ -5,10 +5,17 @@ But you could custom your own clean command via [custom config file](#custom-con
 
 ## Install
 
+### Install From [crates-io](https://crates.io/crates/clean-rs)
+```bash
+cargo install clean-rs
+```
+
+### Install Manually
 ```bash
 git clone https://github.com/holi-java/clean.git
 cargo install --path clean
 ```
+
 
 ## Usage 
 
@@ -24,7 +31,7 @@ clean /home/projects
 
 Add `.cleanrc` config file under your home directory as below:
 
-```
+```none
 # Directory ends with slash will remove the whole directory
 node_modules/
 
