@@ -32,10 +32,14 @@ impl<'a> Plan<'a> {
     pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> IOResult<bool> {
         let work_dir = work_dir.as_ref();
         match self {
-            Plan::Cmd(cmd) => cmd.run(work_dir).await.map(|status| status.success()),
-            Plan::RmDir(dir) => tokio::fs::remove_dir_all(work_dir.join(dir))
-                .await
-                .map(|_| true),
+            Plan::Cmd(cmd) if work_dir.exists() => {
+                cmd.run(work_dir).await.map(|status| status.success())
+            }
+            Plan::RmDir(dir) => match work_dir.join(dir) {
+                path if !path.exists() => Ok(true),
+                path => tokio::fs::remove_dir_all(path).await.map(|_| true),
+            },
+            _ => Ok(true),
         }
     }
 }
@@ -242,6 +246,20 @@ mod tests {
         let result: IOResult<bool> = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
+    }
+
+    #[tokio::test]
+    async fn return_immediately_when_rm_dir_which_did_not_exists() {
+        let rm = Plan::RmDir("node_modules".into());
+        let result: IOResult<bool> = rm.run(".").await;
+        assert!(result.unwrap());
+    }
+
+    #[tokio::test]
+    async fn return_immediately_work_dir_did_not_exists() {
+        let rm = Plan::RmDir("node_modules".into());
+        let result: IOResult<bool> = rm.run("/home/unknown").await;
+        assert!(result.unwrap());
     }
 
     #[tokio::test]

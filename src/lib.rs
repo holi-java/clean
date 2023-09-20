@@ -61,10 +61,21 @@ async fn collect<P>(entry: P, config: Arc<Config>, tx: Sender<Execution<'static>
 where
     P: AsRef<Path>,
 {
+    macro_rules! try_unwrap {
+        ($exp: expr) => {
+            match $exp {
+                Ok(value) => value,
+                Err(err) => match err.kind() {
+                    std::io::ErrorKind::NotFound => return Ok(()),
+                    _ => return Err(err),
+                },
+            }
+        };
+    }
     let entry = entry.as_ref();
-    let mut dir = fs::read_dir(entry).await?;
+    let mut dir = try_unwrap!(fs::read_dir(entry).await);
 
-    while let Some(current) = dir.next_entry().await?.map(|e| e.path()) {
+    while let Some(current) = try_unwrap!(dir.next_entry().await).map(|e| e.path()) {
         if let Some(plan) = config.parse(&current) {
             let entry = entry.to_owned();
             let _ = tx.send(Execution(plan, entry.to_owned())).await;
