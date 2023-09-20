@@ -47,8 +47,8 @@ where
             let rx = rx.clone();
             tokio::spawn(async move {
                 let mut clean = false;
-                while let Some(action) = rx.lock().await.recv().await {
-                    clean = action.run().await? || clean;
+                while let Some(execution) = rx.lock().await.recv().await {
+                    clean = execution.run().await? || clean;
                 }
                 IOResult::<_>::Ok(clean)
             })
@@ -63,22 +63,14 @@ where
 {
     let entry = entry.as_ref();
     let mut dir = fs::read_dir(entry).await?;
-    let mut sub_dirs = vec![];
-    let mut discovered = false;
 
     while let Some(current) = dir.next_entry().await?.map(|e| e.path()) {
         if let Some(plan) = config.parse(&current) {
             let entry = entry.to_owned();
             let _ = tx.send(Execution(plan, entry.to_owned())).await;
-            discovered = true;
         }
         if current.is_dir() {
-            sub_dirs.push(current);
-        }
-    }
-    if !discovered {
-        for dir in sub_dirs {
-            collect(dir, config.clone(), tx.clone()).await?;
+            collect(current, config.clone(), tx.clone()).await?;
         }
     }
     return Ok(());
