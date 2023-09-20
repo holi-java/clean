@@ -19,7 +19,9 @@ clean /home/projects
 
 ## Custom Config File
 
-```toml
+Add `.cleanrc` config file under your home directory as below:
+
+```
 # Directory ends with slash will remove the whole directory
 node_modules/
 
