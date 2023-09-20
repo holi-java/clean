@@ -3,7 +3,15 @@ name = "clean"
 version = "0.1.0"
 edition = "2021"
 description = "Project clean tools support `rust`, `golang`, `maven` and `gradle` projects out of the box"
+authors = ["feexon"]
+repository = "https://github.com/holi-java/clean"
 license = "MIT"
+readme = "./README.md"
+rust-version = "1.71"
+license-file = "./LICENSE"
+keywords = ["tools", "clean-tools"]
+categories = ["tools"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
