@@ -22,7 +22,7 @@ impl<'a> Plan<'a> {
             }
             Plan::RmDir(dir) => match work_dir.join(dir) {
                 path if !path.exists() => Ok(true),
-                path => Ok(tokio::fs::remove_dir_all(path).await.map(|_| true)?),
+                path => Ok(remove_dir_all::remove_dir_all(path).map(|_| true)?),
             },
             _ => Ok(true),
         }
