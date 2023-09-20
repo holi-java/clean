@@ -83,25 +83,17 @@ impl Config {
             let mut parts = line.splitn(2, '=').map(|s| s.trim());
             match (parts.next(), parts.next()) {
                 (Some(file), Some(cmd)) if !file.is_empty() && !cmd.is_empty() => {
-                    let cmd = cmd.split(' ').map(String::from).collect::<Vec<_>>();
-                    registry.insert(
-                        file.to_string(),
-                        Box::new(move || {
-                            Plan::Cmd(Cmd::new(
-                                cmd[0].to_string(),
-                                cmd[1..].iter().map(String::from),
-                            ))
-                        }),
-                    );
+                    let cmd = format!("!{cmd}").parse::<Cmd>().map_err(|_| help())?;
+                    registry.insert(file.to_string(), Box::new(move || Plan::Cmd(cmd.clone())));
                 }
-                _ => return help(),
+                _ => return Err(help()),
             }
         }
 
         return Ok(Config { registry });
 
-        fn help() -> IOResult<Config> {
-            Err(Error::other(
+        fn help() -> Error {
+            Error::other(
                 "\
 # Config Examples:
 
@@ -111,7 +103,7 @@ node_modules/
 # run custom command
 pom.xml = mvn -B clean
 ",
-            ))
+            )
         }
     }
 
