@@ -14,6 +14,20 @@ pub(crate) enum Plan<'a> {
 }
 
 impl<'a> Plan<'a> {
+    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result<bool> {
+        let work_dir = work_dir.as_ref();
+        match self {
+            Plan::Cmd(cmd) if work_dir.exists() => {
+                Ok(cmd.run(work_dir).await.map(|status| status.success())?)
+            }
+            Plan::RmDir(dir) => match work_dir.join(dir) {
+                path if !path.exists() => Ok(true),
+                path => Ok(tokio::fs::remove_dir_all(path).await.map(|_| true)?),
+            },
+            _ => Ok(true),
+        }
+    }
+
     #[cfg(test)]
     fn into_cmd(self) -> Option<Cmd<'a>> {
         match self {
@@ -26,20 +40,6 @@ impl<'a> Plan<'a> {
         match self {
             Plan::RmDir(_) if !path.as_ref().is_dir() => None,
             _ => Some(self),
-        }
-    }
-
-    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result<bool> {
-        let work_dir = work_dir.as_ref();
-        match self {
-            Plan::Cmd(cmd) if work_dir.exists() => {
-                Ok(cmd.run(work_dir).await.map(|status| status.success())?)
-            }
-            Plan::RmDir(dir) => match work_dir.join(dir) {
-                path if !path.exists() => Ok(true),
-                path => Ok(tokio::fs::remove_dir_all(path).await.map(|_| true)?),
-            },
-            _ => Ok(true),
         }
     }
 }
@@ -55,15 +55,15 @@ unsafe impl Send for Config {}
 unsafe impl Sync for Config {}
 
 impl Config {
+    pub fn empty() -> Config {
+        Default::default()
+    }
+
     pub async fn home() -> Result<Config> {
         match home::home_dir().map(|home| home.join(".cleanrc")) {
             Some(file) if file.is_file() => Self::load(File::open(file).await?).await,
             _ => Ok(Self::empty()),
         }
-    }
-
-    pub fn empty() -> Config {
-        Default::default()
     }
 
     pub async fn load<T: AsyncRead + Unpin>(config: T) -> Result<Config> {
