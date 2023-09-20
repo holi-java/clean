@@ -6,7 +6,7 @@ use std::{
 
 use async_recursion::async_recursion;
 use conf::{Config, Plan};
-use futures::future::try_join_all;
+use futures::future::{try_join_all, TryJoinAll};
 use tokio::{
     fs,
     sync::{
@@ -36,17 +36,17 @@ where
     let ncpus = num_cpus::get();
     let (tx, rx) = mpsc::channel::<Execution>(ncpus);
 
-    let tasks = spawn((ncpus >> 1).max(1), Arc::new(Mutex::new(rx))).collect::<Vec<_>>();
+    let tasks = spawn((ncpus >> 1).max(1), Arc::new(Mutex::new(rx)));
     collect(entry, Arc::new(config), tx).await?;
 
-    return try_join_all(tasks)
+    return tasks
         .await?
         .into_iter()
         .try_fold(true, |status, result| result.map(|each| each || status));
 
     type ExecutionRecv = Arc<Mutex<Receiver<Execution<'static>>>>;
-    fn spawn(n: usize, rx: ExecutionRecv) -> impl Iterator<Item = JoinHandle<Result>> {
-        (0..n).map(move |_| {
+    fn spawn(n: usize, rx: ExecutionRecv) -> TryJoinAll<JoinHandle<Result>> {
+        try_join_all((0..n).map(move |_| {
             let rx = rx.clone();
             tokio::spawn(async move {
                 let mut clean = false;
@@ -55,7 +55,7 @@ where
                 }
                 Result::Ok(clean)
             })
-        })
+        }))
     }
 }
 
