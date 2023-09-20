@@ -4,6 +4,7 @@ use tokio::process::{Child, Command};
 
 use crate::IOResult;
 
+#[derive(Debug, Clone)]
 pub struct Cmd<'a> {
     pub command: Cow<'a, str>,
     pub args: Vec<Cow<'a, str>>,
@@ -36,7 +37,6 @@ impl<'a> Cmd<'a> {
             .args(self.args.iter().map(|arg| arg.as_ref()))
             .current_dir(work_dir.as_ref());
 
-        #[cfg(test)]
         let cmd = {
             use std::process::Stdio;
             cmd.stdout(Stdio::piped()).stderr(Stdio::piped())

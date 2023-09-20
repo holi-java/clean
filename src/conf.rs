@@ -7,6 +7,7 @@ use tokio::{
 
 use crate::{cmd::Cmd, IOResult};
 
+#[derive(Debug, Clone)]
 pub enum Plan<'a> {
     Cmd(Cmd<'a>),
     RmDir(OsString),
@@ -28,7 +29,7 @@ impl<'a> Plan<'a> {
         }
     }
 
-    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> Result<bool, Error> {
+    pub async fn run<P: AsRef<Path>>(&self, work_dir: P) -> IOResult<bool> {
         let work_dir = work_dir.as_ref();
         match self {
             Plan::Cmd(cmd) => cmd.run(work_dir).await.map(|status| status.success()),
