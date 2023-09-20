@@ -34,7 +34,7 @@ where
 {
     let (tx, rx) = mpsc::channel::<Execution>(5);
 
-    let tasks = spawn(6, Arc::new(Mutex::new(rx))).collect::<Vec<_>>();
+    let tasks = spawn((num_cpus::get() >> 1).max(1), Arc::new(Mutex::new(rx))).collect::<Vec<_>>();
     collect(entry, Arc::new(config), tx).await?;
 
     return try_join_all(tasks)

@@ -106,6 +106,7 @@ dependencies = [
  "future-utils",
  "futures 0.3.28",
  "home",
+ "num_cpus",
  "tokio 1.32.0",
  "tokio-stream",
 ]
