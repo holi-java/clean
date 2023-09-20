@@ -1,6 +1,6 @@
 use std::{io, path::Path};
 
-use clean::{clean_with_config, conf::Config, Result};
+use clean_rs::{clean_with_config, conf::Config, Result};
 use tokio::fs;
 
 #[tokio::test]

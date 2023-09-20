@@ -1,5 +1,5 @@
 [package]
-name = "clean"
+name = "clean-rs"
 version = "0.1.0"
 edition = "2021"
 description = "Project clean tools support `rust`, `golang`, `maven` and `gradle` projects out of the box"
@@ -41,3 +41,7 @@ debug = 0
 lto = "fat"
 opt-level = "z"
 strip = true
+
+[[bin]]
+name = "clean"
+path = "src/main.rs"

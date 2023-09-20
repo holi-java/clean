@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use clean::{clean, Result};
+use clean_rs::{clean, Result};
 
 #[tokio::main]
 async fn main() {
