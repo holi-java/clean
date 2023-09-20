@@ -1,6 +1,6 @@
 [package]
 name = "clean-rs"
-version = "0.1.0"
+version = "0.1.3"
 edition = "2021"
 description = "Project clean tools support `rust`, `golang`, `maven` and `gradle` projects out of the box"
 authors = ["feexon"]
@@ -8,7 +8,6 @@ repository = "https://github.com/holi-java/clean"
 license = "MIT"
 readme = "./README.md"
 rust-version = "1.71"
-license-file = "./LICENSE"
 keywords = ["tools", "clean-tools"]
 categories = ["tools"]
 

@@ -1,4 +1,15 @@
-# Project Clean Tools [![Rust][badge]][rust]
+# Project Clean Tools 
+
+[![Rust][badge]][rust]
+[![crates.io][crates.badge]][crates.io]
+[![docs.rs][docs.badge]][docs.rs]
+
+[crates.badge]: https://img.shields.io/crates/v/clean-rs.svg
+[crates.io]: https://crates.io/crates/clean-rs
+[docs.badge]: https://img.shields.io/docsrs/clean-rs
+[docs.rs]: https://docs.rs/clean-rs
+[badge]: https://github.com/holi-java/clean/actions/workflows/rust.yml/badge.svg?branch=main
+[rust]: https://github.com/holi-java/clean/actions/workflows/rust.yml
 
 Project clean tools supports `rust`, `golang`, `maven`, `gradle` projects out of the box.
 But you could custom your own clean command via [custom config file](#custom-config-file): `.cleanrc`.
@@ -39,5 +50,3 @@ node_modules/
 pom.xml = mvn -B --offline clean
 ```
 
-[badge]: https://github.com/holi-java/clean/actions/workflows/rust.yml/badge.svg?branch=main
-[rust]: https://github.com/holi-java/clean/actions/workflows/rust.yml
