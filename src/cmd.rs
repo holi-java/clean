@@ -2,7 +2,7 @@ use std::{borrow::Cow, path::Path, process::ExitStatus, str::FromStr};
 
 use tokio::process::{Child, Command};
 
-use crate::IOResult;
+use crate::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct Cmd<'a> {
@@ -23,15 +23,15 @@ impl<'a> Cmd<'a> {
         }
     }
 
-    pub async fn run<P>(&self, work_dir: P) -> IOResult<ExitStatus>
+    pub async fn run<P>(&self, work_dir: P) -> Result<ExitStatus>
     where
         P: AsRef<Path>,
     {
-        self.execute(work_dir).await?.wait().await
+        Ok(self.execute(work_dir).await?.wait().await?)
     }
 
     #[inline]
-    async fn execute<P: AsRef<Path>>(&self, work_dir: P) -> IOResult<Child> {
+    async fn execute<P: AsRef<Path>>(&self, work_dir: P) -> Result<Child> {
         let mut cmd = Command::new(self.command.as_ref());
         let cmd = cmd
             .args(self.args.iter().map(|arg| arg.as_ref()))
@@ -42,14 +42,14 @@ impl<'a> Cmd<'a> {
             cmd.stdout(Stdio::piped()).stderr(Stdio::piped())
         };
 
-        cmd.spawn()
+        Ok(cmd.spawn()?)
     }
 }
 
 impl<'a> FromStr for Cmd<'a> {
-    type Err = String;
+    type Err = anyhow::Error;
 
-    fn from_str(command: &str) -> Result<Self, Self::Err> {
+    fn from_str(command: &str) -> std::result::Result<Self, Self::Err> {
         if let Some(command) = command.strip_prefix('!') {
             let mut parts = command.split(' ').map(String::from);
             return Ok(Cmd::new(parts.next().unwrap(), parts));
@@ -59,7 +59,7 @@ impl<'a> FromStr for Cmd<'a> {
             ( $($(#[$meta:meta])? ( $file:literal, $($tt:tt)* )),* $(,)? ) => {
                 match command {
                     $( $(#[$meta])? $file => Ok(Cmd::new(stringify!($($tt)*), ["clean"])),)*
-                    _ => Err(format!("command can not be resolved: `{command}`")),
+                    _ => Err(Error::other(format!("command can not be resolved: `{command}`")))?,
                 }
             };
         }
@@ -143,5 +143,12 @@ mod tests {
         let rm = "!rm -rf .".parse::<Cmd>().unwrap();
         assert_eq!(rm.command, "rm");
         assert_eq!(rm.args, ["-rf", "."]);
+    }
+
+    #[test]
+    fn fails_on_parse_invalid_command() {
+        let err = "test".parse::<Cmd>().unwrap_err();
+
+        assert_eq!(err.to_string(), "command can not be resolved: `test`");
     }
 }

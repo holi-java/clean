@@ -16,7 +16,7 @@ But you could custom your own clean command via [custom config file](#custom-con
 
 ## Install
 
-### Install From [crates-io](https://crates.io/crates/clean-rs)
+### Install From [crates-io][crates-io]
 ```bash
 cargo install clean-rs
 ```

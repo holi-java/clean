@@ -1,6 +1,6 @@
 [package]
 name = "clean-rs"
-version = "0.1.6"
+version = "0.1.8"
 edition = "2021"
 description = "Project clean tools support `rust`, `golang`, `maven` and `gradle` projects out of the box"
 authors = ["feexon"]
@@ -8,8 +8,8 @@ repository = "https://github.com/holi-java/clean"
 license = "MIT"
 readme = "./README.md"
 rust-version = "1.71"
-keywords = ["tools", "clean-tools"]
-categories = ["tools"]
+keywords = ["cli", "tools", "clean-tools"]
+categories = ["cli", "tools"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -33,6 +33,7 @@ num_cpus = "1.16.0"
 termcolor = "1.2"
 path-absolutize = "3.1"
 remove_dir_all = { version = "0.8.2", features = ["parallel"] }
+anyhow = { version = "1.0", features = ["backtrace"] }
 
 [dev-dependencies]
 

@@ -25,7 +25,7 @@ mod error;
 pub use error::Error;
 
 pub(crate) type IOResult<T> = std::io::Result<T>;
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = anyhow::Result<T>;
 
 pub async fn clean<P>(entry: P) -> Result<bool>
 where

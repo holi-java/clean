@@ -97,7 +97,7 @@ impl Config {
                     let cmd = format!("!{cmd}").parse::<Cmd>().map_err(|_| help())?;
                     registry.insert(file.to_string(), Box::new(move || Plan::Cmd(cmd.clone())));
                 }
-                _ => return Err(help()),
+                _ => return Err(help())?,
             }
         }
 
