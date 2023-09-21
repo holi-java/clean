@@ -11,12 +11,13 @@
 [badge]: https://github.com/holi-java/clean/actions/workflows/rust.yml/badge.svg?branch=main
 [rust]: https://github.com/holi-java/clean/actions/workflows/rust.yml
 
+
 Project clean tools supports `rust`, `golang`, `maven`, `gradle` projects out of the box.
 But you could custom your own clean command via [custom config file](#custom-config-file): `.cleanrc`.
 
 ## Install
 
-### Install From [crates-io][crates-io]
+### Install From [crates.io][crates.io]
 ```bash
 cargo install clean-rs
 ```
