@@ -100,21 +100,21 @@ struct Execution<'a>(Plan<'a>, PathBuf);
 
 impl<'a> Execution<'a> {
     async fn run(&self) -> Result<bool> {
-        use termcolor::{
-            Buffer, BufferWriter, Color, ColorChoice, ColorSpec, HyperlinkSpec, WriteColor,
-        };
         let result = self.0.run(&self.1).await;
-        write(&result, &self.1)?;
+        write(self, &result)?;
 
         return result;
 
-        fn write(result: &Result<bool>, path: &Path) -> Result<()> {
+        use termcolor::{
+            Buffer, BufferWriter, Color, ColorChoice, ColorSpec, HyperlinkSpec, WriteColor,
+        };
+        fn write(exe: &Execution, result: &Result<bool>) -> Result<()> {
             use std::io::{stdout, IsTerminal};
             let out = BufferWriter::stdout(match stdout().is_terminal() {
                 true => ColorChoice::Always,
                 _ => ColorChoice::Never,
             });
-            Ok(out.print(&try_concat(tag(path, &out), colorized(result, &out))?)?)
+            return Ok(out.print(&try_concat(tag(exe, &out), colorized(result, &out))?)?);
         }
 
         fn try_concat(head: IOResult<Buffer>, tail: IOResult<Buffer>) -> IOResult<Buffer> {
@@ -122,36 +122,43 @@ impl<'a> Execution<'a> {
             buf.write_all(head?.as_slice())?;
             buf.write_all(tail?.as_slice())?;
             buf.write_all(b"\n")?;
-            Ok(buf)
+            return Ok(buf);
         }
 
-        fn tag(path: &Path, out: &BufferWriter) -> IOResult<Buffer> {
-            let mut buf = out.buffer();
-            write!(buf, "clean: ")?;
-            use path_absolutize::Absolutize;
-            let url = format!("file://{}", path.absolutize()?.display());
-            #[cfg(target_os = "windows")]
-            let url = url.replace('\\', "/");
+        fn tag(exe: &Execution, out: &BufferWriter) -> IOResult<Buffer> {
+            let mut buf = colorized_text(exe.0.cmd().as_ref(), Color::Cyan, out)?;
+            let url = {
+                use path_absolutize::Absolutize;
+                let url = format!("file://{}", exe.1.absolutize()?.display());
+                #[cfg(target_os = "windows")]
+                let url = url.replace('\\', "/");
+                url
+            };
+            write!(buf, " clean: ")?;
             buf.set_hyperlink(&HyperlinkSpec::open(url.as_bytes()))?;
-            write!(buf, "{}", path.display())?;
+            write!(buf, "{}", exe.1.display())?;
             buf.set_hyperlink(&HyperlinkSpec::close())?;
             write!(buf, "? ")?;
-            Ok(buf)
+            return Ok(buf);
         }
 
         fn colorized(result: &Result<bool>, out: &BufferWriter) -> IOResult<Buffer> {
-            let mut buf = out.buffer();
             let (fg, text) = if let Ok(true) = result {
                 (Color::Green, "ok")
             } else {
                 (Color::Red, "error")
             };
+            return colorized_text(text, fg, out);
+        }
+
+        fn colorized_text(text: &str, fg: Color, out: &BufferWriter) -> IOResult<Buffer> {
+            let mut buf = out.buffer();
             let mut spec = ColorSpec::new();
             buf.set_color(spec.set_fg(Some(fg)))?;
             write!(buf, "{}", text)?;
             spec.clear();
             buf.set_color(&spec)?;
-            Ok(buf)
+            return Ok(buf);
         }
     }
 }

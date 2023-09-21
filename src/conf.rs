@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ffi::OsString, path::Path};
+use std::{borrow::Cow, collections::HashMap, ffi::OsString, path::Path};
 
 use tokio::{
     fs::File,
@@ -25,6 +25,13 @@ impl<'a> Plan<'a> {
                 path => Ok(remove_dir_all::remove_dir_all(path).map(|_| true)?),
             },
             _ => Ok(true),
+        }
+    }
+
+    pub fn cmd(&self) -> &Cow<str> {
+        match self {
+            Plan::Cmd(cmd) => &cmd.command,
+            Plan::RmDir(_) => &Cow::Borrowed("rm"),
         }
     }
 
@@ -293,5 +300,11 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(self.0);
         }
+    }
+
+    #[test]
+    fn plan_cmd() {
+        assert_eq!(Plan::Cmd("pom.xml".parse().unwrap()).cmd(), "mvn");
+        assert_eq!(Plan::RmDir("node_modules".into()).cmd(), "rm");
     }
 }
