@@ -2,7 +2,7 @@
 name = "clean-rs"
 version = "0.1.8"
 edition = "2021"
-description = "Project clean tools support `rust`, `golang`, `maven` and `gradle` projects out of the box"
+description = "Project clean tools support rust, golang, maven and gradle projects out of the box"
 authors = ["feexon"]
 repository = "https://github.com/holi-java/clean"
 license = "MIT"
