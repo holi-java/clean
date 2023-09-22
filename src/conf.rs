@@ -129,8 +129,13 @@ pom.xml = mvn -B clean\
 }
 
 #[cfg(test)]
+#[path = "./test.rs"]
+mod test;
+
+#[cfg(test)]
 mod tests {
-    use std::{fs::create_dir_all, path::Path, time::SystemTime};
+    use super::test::RmDirGuard;
+    use std::{fs::create_dir_all, time::SystemTime};
 
     use crate::{
         conf::{Config, Plan},
@@ -292,14 +297,6 @@ mod tests {
         let result: Result<bool> = rm.run(tmp).await;
         assert!(result.unwrap());
         assert!(!test.exists(), "dir should be removed");
-    }
-
-    struct RmDirGuard<'a>(&'a Path);
-
-    impl<'a> Drop for RmDirGuard<'a> {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(self.0);
-        }
     }
 
     #[test]

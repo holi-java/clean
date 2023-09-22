@@ -3,9 +3,15 @@ use std::{io, path::Path};
 use clean_rs::{clean_with_config, conf::Config, Result};
 use tokio::fs;
 
+#[path = "../src/test.rs"]
+mod test;
+
+use test::RmDirGuard;
+
 #[tokio::test]
 async fn clean_dir() {
     let start = std::env::temp_dir().join("test");
+    let _guard = RmDirGuard(&start);
     let _ = fs::remove_dir_all(&start).await;
     fs::create_dir_all(&start).await.unwrap();
     copy("tests/data", &start).await.unwrap();
@@ -22,6 +28,7 @@ async fn clean_dir() {
 #[tokio::test]
 async fn clean_dir_recursively() {
     let start = std::env::temp_dir().join("a/b/c");
+    let _guard = RmDirGuard(start.join("../.."));
     let _ = fs::remove_dir_all(&start).await;
     fs::create_dir_all(&start).await.unwrap();
     copy("tests/data", &start).await.unwrap();
@@ -38,6 +45,7 @@ async fn clean_dir_recursively() {
 #[tokio::test]
 async fn clean_all_generated_dirs() {
     let start = std::env::temp_dir().join("multiple");
+    let _guard = RmDirGuard(&start);
     let _ = fs::remove_dir_all(&start).await;
     fs::create_dir_all(start.join("a")).await.unwrap();
     copy("tests/data", start.join("a")).await.unwrap();
