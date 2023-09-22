@@ -62,6 +62,20 @@ async fn clean_all_generated_dirs() {
     assert!(!b.exists());
 }
 
+#[tokio::test]
+async fn reports_error_if_entry_path_does_not_exists() {
+    let err = clean("absent").await.unwrap_err();
+
+    assert_eq!(err.to_string(), "Directory not found: absent");
+}
+
+#[tokio::test]
+async fn reports_error_if_entry_path_is_not_directory() {
+    let err = clean("Cargo.toml").await.unwrap_err();
+
+    assert_eq!(err.to_string(), "Cargo.toml is not a directory");
+}
+
 #[async_recursion::async_recursion(?Send)]
 async fn copy<S: AsRef<Path>, D: AsRef<Path>>(src: S, dest: D) -> io::Result<()> {
     let (src, dest) = (src.as_ref(), dest.as_ref());

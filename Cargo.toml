@@ -1,6 +1,6 @@
 [package]
 name = "clean-rs"
-version = "0.1.16"
+version = "0.1.18"
 edition = "2021"
 description = "Project clean tools support rust, golang, maven and gradle projects out of the box"
 authors = ["feexon"]

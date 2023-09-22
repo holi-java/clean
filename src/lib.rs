@@ -38,6 +38,7 @@ pub async fn clean_with_config<P>(entry: P, config: Config) -> Result<bool>
 where
     P: AsRef<Path>,
 {
+    assert_dir_exists(entry.as_ref())?;
     let ncpus = num_cpus::get();
     let (tx, rx) = mpsc::channel::<Execution>(ncpus);
 
@@ -61,6 +62,22 @@ where
                 Result::Ok(clean)
             })
         }))
+    }
+
+    fn assert_dir_exists(path: &Path) -> Result<()> {
+        if !path.exists() {
+            return Err(Error::other(format!(
+                "Directory not found: {}",
+                path.display()
+            )))?;
+        }
+        if !path.is_dir() {
+            return Err(Error::other(format!(
+                "{} is not a directory",
+                path.display()
+            )))?;
+        }
+        Ok(())
     }
 }
 
